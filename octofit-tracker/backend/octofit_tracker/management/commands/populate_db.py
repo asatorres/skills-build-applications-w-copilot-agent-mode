@@ -1,6 +1,7 @@
 
+
 from django.core.management.base import BaseCommand
-from pymongo import MongoClient, ASCENDING
+from octofit_tracker.models import User, Team, Activity, Leaderboard, Workout
 
 # Datos de ejemplo
 USERS = [
@@ -39,23 +40,25 @@ class Command(BaseCommand):
     help = 'Populate the octofit_db database with test data'
 
     def handle(self, *args, **options):
-        client = MongoClient('localhost', 27017)
-        db = client['octofit_db']
-        # Eliminar datos existentes
-        db.users.delete_many({})
-        db.teams.delete_many({})
-        db.activities.delete_many({})
-        db.leaderboard.delete_many({})
-        db.workouts.delete_many({})
+        # Eliminar datos existentes usando los modelos de Django
+        User.objects.all().delete()
+        Team.objects.all().delete()
+        Activity.objects.all().delete()
+        Leaderboard.objects.all().delete()
+        Workout.objects.all().delete()
 
-        # Insertar datos de ejemplo
-        db.users.insert_many(USERS)
-        db.teams.insert_many(TEAMS)
-        db.activities.insert_many(ACTIVITIES)
-        db.leaderboard.insert_many(LEADERBOARD)
-        db.workouts.insert_many(WORKOUTS)
+        # Insertar datos de ejemplo usando los modelos de Django
+        for team in TEAMS:
+            Team.objects.create(**team)
+        for user in USERS:
+            User.objects.create(**user)
+        for activity in ACTIVITIES:
+            Activity.objects.create(**activity)
+        for entry in LEADERBOARD:
+            Leaderboard.objects.create(**entry)
+        for workout in WORKOUTS:
+            Workout.objects.create(**workout)
 
-        # Índice único en email de usuarios
-        db.users.create_index([("email", ASCENDING)], unique=True)
+        self.stdout.write(self.style.SUCCESS('La base de datos octofit_db ha sido poblada con datos de prueba usando los modelos de Django.'))
 
         self.stdout.write(self.style.SUCCESS('La base de datos octofit_db ha sido poblada con datos de prueba.'))
